@@ -12,15 +12,18 @@ import javax.swing.JPanel;
  */
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.*;
 import java.util.List;
 
 class SummaryPanel extends JPanel {
     private static JTextArea topWinnersTextArea;
     private static JTextArea playerDebtsTextArea;
+    private JButton repayButton; // Add the "Repay" button
     public static SummaryPanel instance; // Singleton
     public SummaryPanel() {
-        setLayout(new GridLayout(1, 2)); // Use a 1x2 grid layout
+        setLayout(new GridLayout(1, 3)); // Use a 1x2 grid layout
 
         // Create and initialize text areas
         topWinnersTextArea = new JTextArea("Top Winners:\n", 10, 20);
@@ -30,10 +33,21 @@ class SummaryPanel extends JPanel {
         playerDebtsTextArea = new JTextArea("Player Debts:\n", 10, 20);
         playerDebtsTextArea.setEditable(false); // Make it read-only
         JScrollPane playerDebtsScrollPane = new JScrollPane(playerDebtsTextArea);
+        
+         repayButton = new JButton("Repay");
+        repayButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                
+            }
+        });
 
+        // Add the "Repay" button to the panel
+        
         // Add the scroll panes to the summary panel
         add(topWinnersScrollPane);
         add(playerDebtsScrollPane);
+        //add(repayButton);
         this.instance = this;
     }
 

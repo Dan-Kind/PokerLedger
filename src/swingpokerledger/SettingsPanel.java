@@ -13,11 +13,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 
 class SettingsPanel extends JPanel {
     private JButton newGameButton;
@@ -25,6 +20,7 @@ class SettingsPanel extends JPanel {
     private JButton loadButton;
     private JButton changeButton;
     private LedgerPanel ledgerPanel;
+    private JPanel playerListPanel;
     private JSpinner incrementSpinner; // Added number spinner
     private static SettingsPanel instance; // Singleton instance
     public int incrementSize;
@@ -62,6 +58,39 @@ class SettingsPanel extends JPanel {
         // Initialize the increment size to the default value
         incrementSize = (int) incrementSpinner.getValue();
         
+        playerListPanel = new JPanel();
+        playerListPanel.setLayout(new BoxLayout(playerListPanel, BoxLayout.Y_AXIS));
+        JScrollPane playerScrollPane = new JScrollPane(playerListPanel);
+        playerScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        playerScrollPane.setPreferredSize(new Dimension(300, 200));
+        
+
+        changeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                updatePlayerList(); // Update the player list when the button is clicked
+                showPopup(playerScrollPane);
+            }
+
+            private void showPopup(JScrollPane playerScrollPane) {
+                // Create a JDialog as the popup window
+                JDialog popup = new JDialog();
+                popup.setTitle("Player List");
+                popup.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                
+                // Add the JScrollPane containing the player list panel to the popup
+                popup.getContentPane().add(playerScrollPane);
+
+                // Set the size of the popup
+                popup.setSize(new Dimension(1000, 600));
+
+                // Center the popup window on the screen
+                popup.setLocationRelativeTo(null);
+
+                // Make the popup visible
+                popup.setVisible(true);
+            }
+        });
         // Add action listeners to the buttons
         newGameButton.addActionListener(new ActionListener() {
             @Override
@@ -115,5 +144,54 @@ class SettingsPanel extends JPanel {
     public int getIncrementSize() {
         return incrementSize;
     }
-    
+    // Method to update the player list panel
+    private void updatePlayerList() {
+        playerListPanel.removeAll(); // Clear the existing list
+
+        // Iterate through the list of players and add their information
+        for (Player player : Player.getPlayerList()) {
+            JPanel playerInfoPanel = new JPanel();
+            playerInfoPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+            
+            // Create editable text fields for name, phone number, and debt
+            JTextField nameField = new JTextField(player.getName(), 20);
+            JTextField phoneNumberField = new JTextField(player.getPhoneNumber(), 20);
+            JTextField debtField = new JTextField(String.valueOf(player.getTotalDebt()), 10);
+
+            JButton saveButton = new JButton("Save Changes");
+            saveButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    // Update the player's information based on the edited fields
+                    player.setName(nameField.getText());
+                    player.setPhoneNumber(phoneNumberField.getText());
+                    try {
+                        int newDebt = Integer.parseInt(debtField.getText());
+                        player.setTotalDebt(newDebt);
+                    } catch (NumberFormatException ex) {
+                        // Handle invalid input (e.g., non-integer value in debt field)
+                    }
+                    Player.savePlayers("players.ser");
+                    SummaryPanel.updateSummary();
+                }
+            });
+
+            playerInfoPanel.add(new JLabel("Name:"));
+            playerInfoPanel.add(nameField);
+            playerInfoPanel.add(new JLabel("Phone Number:"));
+            playerInfoPanel.add(phoneNumberField);
+            playerInfoPanel.add(new JLabel("Debt:"));
+            playerInfoPanel.add(debtField);
+            playerInfoPanel.add(saveButton);
+
+            playerListPanel.add(playerInfoPanel); // Add the player info panel to the list
+            
+        }
+        
+        revalidate(); // Refresh the panel
+        repaint();
+        
+    }
+
+
 }
