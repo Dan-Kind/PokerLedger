@@ -14,7 +14,8 @@ public class SwingPokerLedger {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
+        //Initiate ledger frame
+        LedgerFrame ledgerFrame = new LedgerFrame();
     }
     
 }
