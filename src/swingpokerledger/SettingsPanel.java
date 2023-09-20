@@ -148,11 +148,45 @@ class SettingsPanel extends JPanel {
     private void updatePlayerList() {
         playerListPanel.removeAll(); // Clear the existing list
 
+        // Create a panel for the "Clear all debt" button
+        JPanel clearPanel = new JPanel();
+        JButton clearAllDebtButton = new JButton("Clear all debt");
+        JButton clearAllWinsButton = new JButton("Clear all wins");
+        clearAllDebtButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Add code here to clear all debts for all players
+                for (Player player : Player.getPlayerList()) {
+                    player.setTotalDebt(0);
+                }
+                Player.savePlayers("players.ser");
+                SummaryPanel.updateSummary();
+                
+            }
+        });
+        clearAllWinsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Add code here to clear all debts for all players
+                // You'll need to iterate through your player list and set the debt to 0 for each player
+                for (Player player : Player.getPlayerList()) {
+                    player.setWins(0);
+                }
+                Player.savePlayers("players.ser");
+                SummaryPanel.updateSummary();
+            }
+        });
+        
+        
+        clearPanel.add(clearAllDebtButton);
+        clearPanel.add(clearAllWinsButton);
+        playerListPanel.add(clearPanel); // Add the clear debt button panel at the top
+
         // Iterate through the list of players and add their information
         for (Player player : Player.getPlayerList()) {
             JPanel playerInfoPanel = new JPanel();
             playerInfoPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-            
+
             // Create editable text fields for name, phone number, and debt
             JTextField nameField = new JTextField(player.getName(), 20);
             JTextField phoneNumberField = new JTextField(player.getPhoneNumber(), 20);
@@ -185,13 +219,12 @@ class SettingsPanel extends JPanel {
             playerInfoPanel.add(saveButton);
 
             playerListPanel.add(playerInfoPanel); // Add the player info panel to the list
-            
         }
-        
+
         revalidate(); // Refresh the panel
         repaint();
-        
     }
+
 
 
 }

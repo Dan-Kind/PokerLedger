@@ -22,6 +22,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
 
@@ -34,6 +35,7 @@ public class GamePanel extends JPanel {
     private JComboBox<Player> playerComboBox;
     private JButton addPlayerButton;
     private JButton chooseWinnerButton;
+    private JButton drawButton;
     private JPanel playerContainer;
     private JLabel instanceLabel;
     private JPanel outcomePanel; // Panel to display game outcomes
@@ -53,6 +55,7 @@ public class GamePanel extends JPanel {
         JButton addRecentPlayersButton = new JButton("Add Recent Players");
         JButton removePlayerButton = new JButton("Remove Player");
         chooseWinnerButton = new JButton("Choose Winner");
+        drawButton = new JButton("Draw");
         this.instanceLabel = new JLabel("Game " + instanceNumber);
         
          // Create an outer panel with a black border
@@ -83,6 +86,7 @@ public class GamePanel extends JPanel {
         topPanel.add(playerComboBox);
         topPanel.add(addPlayerButton);
         topPanel.add(chooseWinnerButton);
+        topPanel.add(drawButton);
         topPanel.add(addRecentPlayersButton);
         topPanel.add(removePlayerButton);
         innerPanel.add(topPanel);
@@ -93,7 +97,13 @@ public class GamePanel extends JPanel {
         
         // Create a scrollable container for player panels
         
-        
+        drawButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //Create a popup like the add players existing where it splits the debt in between the cosen players.
+                draw();
+            }
+        });
         
         removePlayerButton.addActionListener(new ActionListener() {
             @Override
@@ -137,7 +147,7 @@ public class GamePanel extends JPanel {
         chooseWinnerButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                chooseWinner();
+                chooseWinner(null);
             }
         });
         
@@ -174,7 +184,54 @@ public class GamePanel extends JPanel {
         playerContainer.revalidate();
         playerContainer.repaint();
     }
+    
+   private void draw() {
+        JPanel drawPanel = new JPanel();
+        drawPanel.setLayout(new BoxLayout(drawPanel, BoxLayout.Y_AXIS));
 
+        JButton addWinnerButton = new JButton("Add new winner");
+        addWinnerButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JComboBox<Player> winnerComboBox = new JComboBox<>(players.toArray(new Player[0]));
+                winnerComboBox.setRenderer(new PlayerComboBoxRenderer());
+                drawPanel.add(winnerComboBox);
+                drawPanel.revalidate(); // Refresh the panel to show the new ComboBox
+            }
+        });
+
+        drawPanel.add(addWinnerButton);
+
+        // Create a JScrollPane and add the drawPanel to it
+        JScrollPane scrollPane = new JScrollPane(drawPanel);
+        scrollPane.setPreferredSize(new Dimension(200, 200)); // Set the preferred size of the scroll pane
+
+        int result = JOptionPane.showConfirmDialog(
+            this,
+            scrollPane, // Add the scroll pane to the dialog
+            "Draw",
+            JOptionPane.OK_CANCEL_OPTION
+        );
+
+        if (result == JOptionPane.OK_OPTION) {
+            List<Player> selectedWinners = new ArrayList<>();
+
+            Component[] components = drawPanel.getComponents();
+            for (Component component : components) {
+                if (component instanceof JComboBox) {
+                    JComboBox<Player> comboBox = (JComboBox<Player>) component;
+                    Player selectedPlayer = (Player) comboBox.getSelectedItem();
+                    if (selectedPlayer != null && !selectedWinners.contains(selectedPlayer)) {
+                        selectedWinners.add(selectedPlayer);
+                    }
+                }
+            }
+            chooseWinner(selectedWinners);
+            // Now 'selectedWinners' contains the selected winning players
+            // You can process this list as needed for your win logic
+        }
+    }
+    
     private void addNewPlayer() {
     // Create an array of button labels
     String[] options = {"Add New Player", "Add Existing Player"};
@@ -264,55 +321,72 @@ public class GamePanel extends JPanel {
     
 
 
-    private void chooseWinner() {
+    private void chooseWinner(List<Player> winners) {
         if (players.isEmpty()) {
         JOptionPane.showMessageDialog(this, "No players to choose from.");
         return;
         }
+        if(winners.size() == 1){
+            Player selectedPlayer = (Player) playerComboBox.getSelectedItem();
+            selectedPlayer.setWins(selectedPlayer.getWins() + 1);
+            List<Player> selectedPlayerList = new ArrayList<>();
+            selectedPlayerList.add(selectedPlayer);
+            displayGameOutcomes(selectedPlayerList);
 
-        Player selectedPlayer = (Player) playerComboBox.getSelectedItem();
-        selectedPlayer.setWins(selectedPlayer.getWins() + 1);
+            //Update recent players
+            
+
+            // Update player debts based on the winner
+            List<Player> winner = new ArrayList<>();
+            winner.add(selectedPlayer);
+            updatePlayerDebts(winner);
+
+            JOptionPane.showMessageDialog(this, selectedPlayer.getName() + " is the winner!");
+        } else {
+            List<String> winnerNames = new ArrayList<>();
+            //Handle multiple winners
+            for (Player winner : winners){
+                winner.setWins(winner.getWins() + 1);
+                winnerNames.add(winner.getName());
+            }
+            displayGameOutcomes(winners);
+            updatePlayerDebts(winners);
+            String winnersMessage = String.join(", ", winnerNames) + " are the winners!";
+            JOptionPane.showMessageDialog(this, winnersMessage);
+            
+        }
         
-        displayGameOutcomes(selectedPlayer);
-        
-        //Update recent players
-        LedgerPanel.recentPlayers = players;
-        
-        // Update player debts based on the winner
-        updatePlayerDebts(selectedPlayer);
-        
-        // Call updateSummary to refresh the summary panel
         SummaryPanel summaryPanel = SummaryPanel.instance; // Replace with your actual reference
         summaryPanel.updateSummary();
-        
-        
-        JOptionPane.showMessageDialog(this, selectedPlayer.getName() + " is the winner!");
+        LedgerPanel.recentPlayers = players;
         done = true;
     }
     
-    private void updatePlayerDebts(Player winner) {
-        int totalDebtChange = 0;
+   private void updatePlayerDebts(List<Player> winners) {
+        int totalCurrentDebt = 0;
 
-        // Calculate the total debt change (sum of current debts of all players)
+        // Calculate the total current debt (sum of current debts of all players)
         for (Player player : players) {
-            if (player != winner) {
-                totalDebtChange += player.getCurrentDebt();
-            }
+            totalCurrentDebt += player.getCurrentDebt();
         }
 
-        // Update the winner's debt
-        winner.setTotalDebt(winner.getTotalDebt() + totalDebtChange );
-        winner.setCurrentDebt(0);
-        // Reset the current debts of all players to 0 (excluding the winner)
+        // Remove the current debt from each player's total debt
         for (Player player : players) {
-            if (player != winner) {
-                player.setTotalDebt(player.getTotalDebt() - player.getCurrentDebt());
-                player.setCurrentDebt(0);
-            }
+            player.setTotalDebt(player.getTotalDebt() - player.getCurrentDebt());
+            player.setCurrentDebt(0);
+        }
+
+        // Calculate the debt to be given to each winner
+        int debtPerWinner = totalCurrentDebt / winners.size();
+
+        // Add the split debt pot to the winners
+        for (Player winner : winners) {
+            winner.setTotalDebt(winner.getTotalDebt() + debtPerWinner);
         }
     }
 
-    private void displayGameOutcomes(Player selectedPlayer) {
+
+    private void displayGameOutcomes(List<Player> winners) {
         // Remove all components inside the inner panel
         innerPanel.removeAll();
 
@@ -321,7 +395,7 @@ public class GamePanel extends JPanel {
             JLabel debtLabel = new JLabel(player.getName() + ": " + player.getCurrentDebt());
 
             // Highlight the selected player (the winner)
-            if (player == selectedPlayer) {
+            if (winners.contains(player)) {
                 debtLabel.setForeground(Color.GREEN); // Set text color to green for the winner
             }
 
