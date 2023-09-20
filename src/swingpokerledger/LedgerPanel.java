@@ -53,9 +53,6 @@ public class LedgerPanel extends JPanel{
                     scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getValue() + notches * scrollSpeed);
                 }
             });
-        
-        
-        
         add(scrollPane, BorderLayout.CENTER);
         setPreferredSize(new Dimension(800, 600)); // Set preferred size
         setBackground(Color.GRAY);
@@ -63,8 +60,6 @@ public class LedgerPanel extends JPanel{
         
         
     }
-    
-    
     
     public void addGamePanel(GamePanel gamePanel) {
         gamePanels.add(gamePanel); // Add the GamePanel to the existing list
@@ -95,6 +90,4 @@ public class LedgerPanel extends JPanel{
     public JScrollPane getScrollPane() {
         return scrollPane;
     }
-    
-    
 }

@@ -191,7 +191,6 @@ class SettingsPanel extends JPanel {
             JTextField nameField = new JTextField(player.getName(), 20);
             JTextField phoneNumberField = new JTextField(player.getPhoneNumber(), 20);
             JTextField debtField = new JTextField(String.valueOf(player.getTotalDebt()), 10);
-
             JButton saveButton = new JButton("Save Changes");
             saveButton.addActionListener(new ActionListener() {
                 @Override
@@ -209,7 +208,6 @@ class SettingsPanel extends JPanel {
                     SummaryPanel.updateSummary();
                 }
             });
-
             playerInfoPanel.add(new JLabel("Name:"));
             playerInfoPanel.add(nameField);
             playerInfoPanel.add(new JLabel("Phone Number:"));
@@ -220,11 +218,7 @@ class SettingsPanel extends JPanel {
 
             playerListPanel.add(playerInfoPanel); // Add the player info panel to the list
         }
-
         revalidate(); // Refresh the panel
         repaint();
     }
-
-
-
 }
